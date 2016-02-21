@@ -1,0 +1,87 @@
+
+[Description]
+
+This small system initial purpose is to control IPTV iptables via jabber
+messages. However the use cases expansion is limitless for notifications
+via jabber messages. So further vision and idealogy mutations may occur
+during development.
+
+[Structure]
+
+The intial system consists of two parts:
+
+* Iptables rules management utility for IPTV table.
+* Jabber bot commands control system.
+
++---------------+        +---------------+         +---------------+
+|               |        |               |         |               |
+|    Firebot    | ---->  |     IPTV      |  ---->  |   iptables    |
+|               |        |               |         |               |
++---------------+        +---------------+         +---------------+
+
+[Prerequisites]
+
+1. GCC
+2. GNU Make
+3. Python v2.7
+4. Python xmpppy
+
+[Instalation]
+
+1. Compile and prepare `iptv` utility.
+
+After compile you must set suid for util to work with superuser access
+permisions. Iptables management requires such permisions unless system
+configured not to ask superuser password.
+
+To compile DEBUG version util that does not do actual iptables calls,
+but instead prints command output to stdout, set CFLAGS:
+
+"""
+CFLAGS += -DDEBUG_ARGS
+"""
+
+To provide custom IPTV iptables table name (default "IPTV") for compile,
+set CFLAGS:
+
+"""
+CFLAGS += -DIPTABLES_IPTV=\"INPUT\"
+"""
+
+"""
+# make
+# chown root:root iptv
+# chmod u+s iptv
+"""
+
+2. Copy python scripts and `iptv` util to yout "dist" directory
+
+[Configuration]
+
+* .settings.conf -- Configuration file stores system settings. Default
+file format and required fields:
+
+"""
+[XMPP]
+SERVER_HOST=talk.google.com
+SERVER_PORT=5223
+USERNAME=xxx@gmail.com
+PASSWORD=yyy
+
+[HTTP]
+PORT=9000
+"""
+
+* .users.json -- Users database file. Created and managed automatically.
+
+[Execution]
+
+* ./firebot -- System executable, connects to XMPP server, starts mini
+local HTTP server.
+* ./mockbot -- Mocked system executable, does not do actual connect to
+XMPP server, however starts mini local HTTP server. Commands entered
+from STDIN input. Imitate user switch with mock command: "user: <user>"
+
+[Contributors]
+
+Author: Edvinas Stunžėnas
