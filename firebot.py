@@ -9,6 +9,7 @@ import table
 import settings
 import action
 import user
+import iptv
 
 #####################################################################
 # Prerequisites                                                     #
@@ -106,15 +107,57 @@ def messageHandler(connection, message):
 class HttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(s):
         query = s.path
+        if not re.match("^\/iptv.*$", query):
+            s.send_error(404)
+            return
+
+        data = dict(re.findall("[\?\&](\w+)=([^&]+)", query))
+        if 'hash' not in data:
+            s.send_error(400)
+            return
+
+        if not public.iptvChangeRequest:
+            s.send_error(400)
+            return
+
+        checkhash = data['hash']
+        if checkhash not in public.iptvChangeRequest:
+            s.send_error(400)
+            return
+
+        uid = public.iptvChangeRequest[checkhash]
+        del public.iptvChangeRequest[checkhash]
+        user = users.get(uid)
+        if not user:
+            s.send_error(400)
+            return
+
+        oldIp = user.ip
+        newIp = s.client_address[0]
+
+        if not oldIp:
+            result = iptv.insertAddress(newIp)
+        else:
+            result = iptv.changeAddress(newIp, oldIp)
+
+        if not result:
+            s.send_error(500)
+            return
+
+        user.ip = newIp
+        user.save()
+
         s.send_response(200)
         s.send_header("Content-type", "text/html")
         s.end_headers()
         s.wfile.write("<html>")
         s.wfile.write("<head>")
-        s.wfile.write("<title>Request GET!</title>")
+        s.wfile.write("<title>IP changed!</title>")
         s.wfile.write("</head>")
         s.wfile.write("<body>")
-        s.wfile.write("<p><h2>Requested: %s</h2></p>" % query)
+        s.wfile.write("<p><h2>IP changed!</h2></p>")
+        s.wfile.write("<p>Old IP: %s</p>" % (oldIp,))
+        s.wfile.write("<p>New IP: %s</p>" % (newIp,))
         s.wfile.write("</body>")
         s.wfile.write("</html>")
 
