@@ -9,3 +9,11 @@ iptv: iptv.c
 
 clean:
 	rm -f iptv
+	rm -rf dist/
+
+dist: iptv
+	mkdir -p dist/
+	cp iptv dist/
+	cp *.py dist/
+	mkdir -p dist/actions/
+	cp actions/*.py dist/actions/
